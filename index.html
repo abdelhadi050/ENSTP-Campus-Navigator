@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#829783">
+  <meta name="description" content="ENSTP Campus Navigator — interactive map, room search and route planning for the École Nationale Supérieure des Travaux Publics.">
+  <meta name="color-scheme" content="light">
+  <title>ENSTP Campus Navigator</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/img/icon-512.png">
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+
+  <!-- Fonts (graceful fallback to system fonts when offline) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <!-- ============== HEADER ============== -->
+  <header class="app-header" role="banner">
+    <div class="app-header__inner">
+      <div class="brand" aria-label="ENSTP Campus Navigator">
+        <img class="brand__logo" src="assets/img/enstp-logo.webp" alt="ENSTP logo" />
+        <span class="brand__text">
+          <span class="brand__name">ENSTP</span>
+          <span class="brand__sub" data-i18n="brand.sub">Campus Navigator</span>
+        </span>
+      </div>
+
+      <div class="app-header__actions">
+        <button class="icon-button" id="help-btn" type="button" aria-haspopup="dialog" aria-label="Help">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M9.4 9.5 a2.6 2.6 0 1 1 4.2 2 c-.8.5-1.6 1-1.6 2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="12" cy="17" r="0.9" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button class="lang-switch__btn" type="button" data-lang="fr" aria-pressed="false">FR</button>
+          <button class="lang-switch__btn" type="button" data-lang="en" aria-pressed="false">EN</button>
+          <button class="lang-switch__btn" type="button" data-lang="ar" aria-pressed="false">ع</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============== MAIN LAYOUT ============== -->
+  <main class="layout" id="main">
+    <!-- Search + info panel (left on desktop, bottom sheet on mobile) -->
+    <aside class="side-panel" id="side-panel" aria-label="Search and route panel">
+
+      <!-- SEARCH -->
+      <section class="card search-card" aria-labelledby="search-title">
+        <h2 class="card__title" id="search-title" data-i18n="search.title">Find a place</h2>
+        <div class="search-input-row">
+          <div class="search-input-wrap">
+            <svg class="search-input-wrap__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/>
+              <path d="M16.5 16.5 L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <input
+              type="search"
+              id="search-input"
+              class="search-input"
+              autocomplete="off"
+              spellcheck="false"
+              autocapitalize="off"
+              data-i18n-ph="search.placeholder"
+              placeholder="Search by room number or building name"
+              aria-label="Search input"
+              aria-expanded="false"
+              aria-controls="search-suggestions"
+            />
+            <button class="search-clear" id="search-clear" type="button" aria-label="Clear search" hidden>
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <button class="button button--primary" id="search-go" type="button" data-i18n="search.go">Search</button>
+        </div>
+        <ul class="suggestions" id="search-suggestions" role="listbox" aria-label="Search suggestions" hidden></ul>
+        <p class="search-hint" id="search-hint" data-i18n="search.hint">Try a room number, a name, or a building number (1–30).</p>
+      </section>
+
+      <!-- DESTINATION INFO -->
+      <section class="card info-card" id="info-card" aria-labelledby="info-title" hidden>
+        <header class="card__header">
+          <h2 class="card__title" id="info-title" data-i18n="info.title">Destination</h2>
+          <button class="icon-button icon-button--ghost" id="info-close" type="button" aria-label="Close info">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              <path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </header>
+        <div class="info-body" id="info-body"></div>
+      </section>
+
+      <!-- ROUTE PLANNING -->
+      <section class="card route-card" aria-labelledby="route-title">
+        <h2 class="card__title" id="route-title" data-i18n="route.title">Route planning</h2>
+        <div class="route-grid">
+          <label class="field">
+            <span class="field__label" data-i18n="route.start">Starting point</span>
+            <select id="start-select" class="select" aria-label="Starting point"></select>
+          </label>
+          <label class="field">
+            <span class="field__label" data-i18n="route.dest">Destination</span>
+            <select id="dest-select" class="select" aria-label="Destination"></select>
+          </label>
+        </div>
+        <div class="route-actions">
+          <button class="button button--primary" id="route-go" type="button" data-i18n="route.calculate">Calculate route</button>
+          <button class="button button--ghost" id="route-clear" type="button" data-i18n="route.clear">Clear</button>
+        </div>
+        <p class="route-info" id="route-info" role="status" aria-live="polite"></p>
+      </section>
+    </aside>
+
+    <!-- MAP -->
+    <section class="map-stage" aria-label="Interactive campus map">
+      <div class="map-stage__inner" id="map-container">
+        <div class="map-controls" role="toolbar" aria-label="Map controls">
+          <button class="map-btn" id="zoom-in" type="button" aria-label="Zoom in">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M12 5 V19 M5 12 H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="map-btn" id="zoom-out" type="button" aria-label="Zoom out">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M5 12 H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="map-btn" id="reset-view" type="button" aria-label="Reset view">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path d="M4 9 a8 8 0 1 1 0 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M4 4 V9 H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+
+        <svg id="campus-svg" class="campus-svg" viewBox="0 0 664 664" preserveAspectRatio="xMidYMid meet" role="img" aria-label="ENSTP campus map">
+          <image href="assets/img/campus-map.jpg" x="0" y="0" width="664" height="664" preserveAspectRatio="xMidYMid meet"/>
+          <g transform="translate(-8,-383)">
+            <g id="route-layer" class="route-layer"></g>
+            <g id="marker-layer" class="marker-layer"></g>
+            <g id="label-layer" class="label-layer"></g>
+          </g>
+        </svg>
+
+        <p class="map-legend" id="map-legend">
+          <span class="map-legend__item"><span class="dot dot--start"></span><span data-i18n="legend.start">Start</span></span>
+          <span class="map-legend__item"><span class="dot dot--dest"></span><span data-i18n="legend.dest">Destination</span></span>
+          <span class="map-legend__item"><span class="dot dot--route"></span><span data-i18n="legend.route">Route</span></span>
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile bottom-sheet handle -->
+  <button class="sheet-handle" id="sheet-handle" type="button" aria-controls="side-panel" aria-expanded="true" hidden>
+    <svg viewBox="0 0 24 24" width="24" height="6" aria-hidden="true">
+      <rect x="6" y="0" width="12" height="3" rx="1.5" fill="currentColor"/>
+    </svg>
+  </button>
+
+  <!-- ============== HELP DIALOG ============== -->
+  <dialog class="help-dialog" id="help-dialog" aria-labelledby="help-title">
+    <div class="help-dialog__inner">
+      <header class="help-dialog__header">
+        <h2 class="help-dialog__title" id="help-title" data-i18n="help.title">How to use</h2>
+        <button class="icon-button icon-button--ghost" id="help-close" type="button" aria-label="Close help">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M6 6 L18 18 M18 6 L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+      <div class="help-dialog__body" id="help-body"></div>
+    </div>
+  </dialog>
+
+  <!-- ============== TEMPLATES ============== -->
+  <template id="tpl-suggestion">
+    <li class="suggestion" role="option"><button class="suggestion__btn" type="button"></button></li>
+  </template>
+
+  <!-- ============== SCRIPTS (ES modules) ============== -->
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>

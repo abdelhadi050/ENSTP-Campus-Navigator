@@ -1,0 +1,27 @@
+{
+  "name": "ENSTP Campus Navigator",
+  "short_name": "ENSTP Map",
+  "description": "Interactive map, room search and route planning for the ENSTP campus.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F8F7F2",
+  "theme_color": "#829783",
+  "icons": [
+    {
+      "src": "assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
